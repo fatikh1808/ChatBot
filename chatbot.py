@@ -3,31 +3,9 @@ import re
 import pprint
 import random
 import smtplib
-# import pyowm
+import pyowm
 
-# APIKEY = 'b114494f3d13c1171b52683221bc69cf'  # your API Key here as string
-# OpenWMap = pyowm.OWM(APIKEY)                   # Use API key to get data
-
-# Weather = OpenWMap.weather_at_place("London")
-
-# Data = Weather.get_weather()
-
-# temp = Data.get_temperature(unit='celsius')
-# print("Average Temp. Currently ", temp['temp'])  # get avg. tmp
-# print("Max Temp. Currently ", temp['temp_max'])  # get max tmp
-# print("Min Temp. Currently ", temp['temp_min'])  # get min tmp>>
-
-
-def sendEmail(to, content):
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.ehlo()
-    server.starttls()
-    server.login('fotihtashlanov@gmail.com', 'Fotix1997')
-    server.sendmail('fotihtashlanov@gmail.com', to, content)
-    server.close()
-
-# send weather/launch
-
+isOn = True
 
 obj = JarvisAI.JarvisAssistant()
 
@@ -38,7 +16,82 @@ def t2s(text):
     obj.text2speech(text)
 
 
-while True:
+def randomizer(arr):
+    return random.choice(arr)
+
+
+# weather
+OpenWmapApikey = 'b114494f3d13c1171b52683221bc69cf'
+# hotkeys
+weathHotKeys = 'weather|temperature'
+# messages
+currentWeather = "Weather is currently"
+averageTempWeather = "Average Temp. Currently "
+
+
+# funtion
+def getWeather(city):
+    OpenWMap = pyowm.OWM(OpenWmapApikey)
+    mgr = OpenWMap.weather_manager()
+    Weather = mgr.weather_at_place(city)
+    Data = Weather.weather
+    curWeath = Data.detailed_status
+    aveTem = Data.temperature(
+        'celsius')['temp']
+    print(currentWeather, curWeath)
+    t2s(f"{currentWeather}, {curWeath}")
+    print(averageTempWeather, aveTem)
+    t2s(f"{averageTempWeather}, {aveTem}")
+
+
+# email
+# hotKeys
+emailHotKeys = "email|mail|send mail|message"
+# messages
+errorEmailSend = "Sorry my friend . I am not able to send this email"
+insertYourMessage = "Please write your message -> "
+emailCustomer = "email to whom? "
+emailSent = "Email has been sent!"
+
+
+# function
+def sendEmail(to, content):
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.login('fotihtashlanov@gmail.com', 'Fotix1997')
+    server.sendmail('fotihtashlanov@gmail.com', to, content)
+    server.close()
+
+
+# infoAbtBot
+# hotKeys
+infoHotKeys = "your name|who are you"
+# messages
+messageInfo = "My name is Jarvis, I am your personal assistant"
+
+
+# howAreYou
+# hotKeys
+hruHotKeys = "how are you"
+# messages
+hruMessages = ['good', 'fine', 'great']
+
+
+# greeting
+# hotkeys
+greetingHotKeys = "hello"
+# messages
+greetAnsArr = ['Hi', 'Hello', "YOOU"]
+
+# turnOff
+# hotkeys
+tornOffHotKeys = "bye|sleep|bye-bye|good bye"
+# messages
+turnOffMess = ["Bye", "bye-bye", "good bye", "see you soon"]
+
+
+while isOn:
     status, command = obj.hot_word_detect()
     if status:
         while True:
@@ -52,37 +105,25 @@ while True:
                 t2s(joke_)
                 break
 
-            if re.search("email|mail|send mail|message", res):
+            if re.search(emailHotKeys, res):
                 try:
-                    t2s("Please write your message))")
-                    content = input("please write your message -> ")
-                    to = input("email to whom? ")
+                    t2s(insertYourMessage)
+                    content = input(insertYourMessage)
+                    to = input(emailCustomer)
                     sendEmail(to, content)
-                    t2s("Email has been sent!")
+                    t2s(emailSent)
                 except Exception as e:
                     print(e)
-                    t2s("Sorry my friend . I am not able to send this email")
+                    t2s(errorEmailSend)
 
             if re.search('setup|set up', res):
                 setup = obj.setup()
                 print(setup)
                 break
 
-            if re.search('google photos', res):
-                photos = obj.show_google_photos()
-                print(photos)
-                break
-
-            if re.search('local photos', res):
-                photos = obj.show_me_my_images()
-                print(photos)
-                break
-
-            if re.search('weather|temperature', res):
+            if re.search(weathHotKeys, res):
                 city = res.split(' ')[-1]
-                weather_res = obj.weather(city=city)
-                print(weather_res)
-                t2s(weather_res)
+                getWeather(city)
                 break
 
             if re.search('news', res):
@@ -133,21 +174,25 @@ while True:
                     obj.launch_any_app(path_of_app=path)
                 break
 
-            if re.search('hello', res):
-                print('Hi')
-                t2s('Hi')
+            if re.search(greetingHotKeys, res):
+                print(randomizer(greetAnsArr))
+                t2s(randomizer(greetAnsArr))
                 break
 
-            if re.search('how are you', res):
-                li = ['good', 'fine', 'great']
-                response = random.choice(li)
+            if re.search(hruHotKeys, res):
+                response = randomizer(hruMessages)
                 print(f"I am {response}")
                 t2s(f"I am {response}")
                 break
 
-            if re.search('your name|who are you', res):
-                print("My name is Jarvis, I am your personal assistant")
-                t2s("My name is Jarvis, I am your personal assistant")
+            if re.search(infoHotKeys, res):
+                print(messageInfo)
+                t2s(messageInfo)
+                break
+
+            if re.search(tornOffHotKeys, res):
+                t2s(randomizer(turnOffMess))
+                isOn = False
                 break
 
             if re.search('what can you do', res):

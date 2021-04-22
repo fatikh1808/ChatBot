@@ -6,6 +6,7 @@ import smtplib
 import pyowm
 
 isOn = True
+isContinue = True
 
 obj = JarvisAI.JarvisAssistant()
 
@@ -18,12 +19,48 @@ def t2s(text):
 
 def randomizer(arr):
     return random.choice(arr)
+# restMessage = ["do you have any questions?", "what do you want else ?", ""]
+
+
+def tellPrint(text):
+    print(text)
+    t2s(text)
+
+
+# isContinue
+# hotkeys
+restHotKeys = "rest|have a rest|having a rest"
+# messages
+restMessage = "I am waiting your questions on the background"
+# funtion
+
+
+def haveRest(bool):
+    isContinue = bool
+
+
+# wcyd
+# hotkeys
+whatCanYouDoHotKeys = 'what can you do'
+# messages
+whatCanYouDoAns = """I can do lots of things, for example you can ask me time, date, weather in your city,
+                I can open websites for you, launch application and more. See the list of commands-"""
+# commands
+whatCanYouDoCommands = {
+    "open websites": "Example: 'open youtube.com",
+    "time": "Example: 'what time it is?'",
+    "date": "Example: 'what date it is?'",
+    "launch applications": "Example: 'launch chrome'",
+    "tell me": "Example: 'tell me about India'",
+    "weather": "Example: 'what weather/temperature in Mumbai?'",
+    "news": "Example: 'news for today' ",
+}
 
 
 # weather
 OpenWmapApikey = 'b114494f3d13c1171b52683221bc69cf'
 # hotkeys
-weathHotKeys = 'weather|temperature'
+weatherHotKeys = 'weather|temperature'
 # messages
 currentWeather = "Weather is currently"
 averageTempWeather = "Average Temp. Currently "
@@ -93,8 +130,10 @@ turnOffMess = ["Bye", "bye-bye", "good bye", "see you soon"]
 
 while isOn:
     status, command = obj.hot_word_detect()
+    print(status, command)
     if status:
-        while True:
+        haveRest(True)
+        while isContinue:
             # use any one of them
             res = obj.mic_input()
             # res = obj.mic_input_ai(debug=True)
@@ -103,15 +142,15 @@ while isOn:
                 joke_ = obj.tell_me_joke('en', 'neutral')
                 print(joke_)
                 t2s(joke_)
-                break
+                continue
 
             if re.search(emailHotKeys, res):
                 try:
-                    t2s(insertYourMessage)
+                    tellPrint(insertYourMessage)
                     content = input(insertYourMessage)
                     to = input(emailCustomer)
                     sendEmail(to, content)
-                    t2s(emailSent)
+                    tellPrint(emailSent)
                 except Exception as e:
                     print(e)
                     t2s(errorEmailSend)
@@ -119,12 +158,12 @@ while isOn:
             if re.search('setup|set up', res):
                 setup = obj.setup()
                 print(setup)
-                break
+                continue
 
-            if re.search(weathHotKeys, res):
+            if re.search(weatherHotKeys, res):
                 city = res.split(' ')[-1]
                 getWeather(city)
-                break
+                continue
 
             if re.search('news', res):
                 news_res = obj.news()
@@ -132,32 +171,30 @@ while isOn:
                 t2s(f"I have found {len(news_res)} news. You can read it. Let me tell you first 2 of them")
                 t2s(news_res[0])
                 t2s(news_res[1])
-                break
+                continue
 
             if re.search('tell me about', res):
                 topic = res[14:]
                 wiki_res = obj.tell_me(topic, sentences=1)
-                print(wiki_res)
-                t2s(wiki_res)
-                break
+                tellPrint(wiki_res)
+                continue
 
             if re.search('date', res):
                 date = obj.tell_me_date()
                 print(date)
                 print(t2s(date))
-                break
+                continue
 
             if re.search('time', res):
                 time = obj.tell_me_time()
-                print(time)
-                t2s(time)
-                break
+                tellPrint(time)
+                continue
 
             if re.search('open', res):
                 domain = res.split(' ')[-1]
                 open_result = obj.website_opener(domain)
                 print(open_result)
-                break
+                continue
 
             if re.search('launch', res):
                 dict_app = {
@@ -172,44 +209,35 @@ while isOn:
                 else:
                     t2s('Launching: ' + app)
                     obj.launch_any_app(path_of_app=path)
-                break
+                continue
 
             if re.search(greetingHotKeys, res):
-                print(randomizer(greetAnsArr))
-                t2s(randomizer(greetAnsArr))
-                break
+                tellPrint(randomizer(greetAnsArr))
+                continue
 
             if re.search(hruHotKeys, res):
                 response = randomizer(hruMessages)
-                print(f"I am {response}")
-                t2s(f"I am {response}")
-                break
+                tellPrint(f"I am {response}")
+                continue
 
             if re.search(infoHotKeys, res):
-                print(messageInfo)
-                t2s(messageInfo)
-                break
+                tellPrint(messageInfo)
+                continue
 
             if re.search(tornOffHotKeys, res):
-                t2s(randomizer(turnOffMess))
+                tellPrint(randomizer(turnOffMess))
                 isOn = False
-                break
+                continue
 
-            if re.search('what can you do', res):
-                li_commands = {
-                    "open websites": "Example: 'open youtube.com",
-                    "time": "Example: 'what time it is?'",
-                    "date": "Example: 'what date it is?'",
-                    "launch applications": "Example: 'launch chrome'",
-                    "tell me": "Example: 'tell me about India'",
-                    "weather": "Example: 'what weather/temperature in Mumbai?'",
-                    "news": "Example: 'news for today' ",
-                }
-                ans = """I can do lots of things, for example you can ask me time, date, weather in your city,
-                I can open websites for you, launch application and more. See the list of commands-"""
-                print(ans)
-                pprint.pprint(li_commands)
-                t2s(ans)
+            if re.search(whatCanYouDoHotKeys, res):
+                print(whatCanYouDoAns)
+                pprint.pprint(whatCanYouDoCommands)
+                t2s(whatCanYouDoAns)
+                continue
+
+            if re.search(restHotKeys, res):
+                tellPrint(restMessage)
+                haveRest(False)
                 break
     else:
         continue
